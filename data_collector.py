@@ -12,11 +12,10 @@
   석탄   3순위 - World Bank Pink Sheet 월간 엑셀
                 'Coal, Australian' ($/mt), FOB Newcastle 6,000kcal/kg
 
-  스크랩  --   국내 철스크랩의 무료·공개 시계열 API 는 확인되지 않았다.
-                임의의 값을 만들지 않고, 출처가 명시된 수기 입력 파일
-                (data/scrap_manual.csv) 만 읽는다. 파일이 비어 있으면
-                화면에 '데이터 소스 확보 중' 이 표시된다.
-                실제 소스를 확보하면 collect_scrap() 만 교체하면 된다.
+  스크랩  --   국내 철스크랩은 무료·공개 시계열 소스를 확보하지 못해 제외했다.
+                지어낸 값을 넣지 않기 위한 결정이다. 소스를 확보하면
+                collect_* 함수를 하나 추가하고 database.ITEMS 에
+                "scrap" 을 되살리면 된다.
 """
 
 from __future__ import annotations
@@ -39,7 +38,6 @@ from database import ITEMS
 load_dotenv()
 
 DATA_DIR = Path(__file__).parent / "data"
-SCRAP_CSV = DATA_DIR / "scrap_manual.csv"
 
 USER_AGENT = "Mozilla/5.0 (compatible; SteelDashboard/1.0; personal MVP)"
 HEADERS = {"User-Agent": USER_AGENT}
@@ -159,55 +157,6 @@ def collect_worldbank(months: int = 36) -> list[dict]:
     return trimmed
 
 
-# ── 가격: 국내 철스크랩 (수기 입력) ─────────────────────────────────────
-
-def collect_scrap() -> list[dict]:
-    """data/scrap_manual.csv 를 읽는다.
-
-    출처(source)와 출처 URL(source_url)이 없는 행은 조용히 버린다.
-    파일이 없거나 데이터 행이 없으면 빈 리스트를 돌려준다 -
-    이 경우 Dashboard 는 '데이터 소스 확보 중' 을 표시한다.
-    """
-    if not SCRAP_CSV.exists():
-        return []
-
-    df = pd.read_csv(SCRAP_CSV, comment="#", skip_blank_lines=True)
-    if df.empty:
-        return []
-
-    required = {"date", "price", "currency", "unit", "source", "source_url"}
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(f"{SCRAP_CSV.name} 에 필요한 열이 없습니다: {sorted(missing)}")
-
-    collected_at = now_iso()
-    rows: list[dict] = []
-    for _, record in df.iterrows():
-        if pd.isna(record.get("source")) or pd.isna(record.get("source_url")):
-            continue  # 출처 없는 값은 쓰지 않는다
-        try:
-            price = float(record["price"])
-            date = pd.to_datetime(record["date"]).strftime("%Y-%m-%d")
-        except (TypeError, ValueError):
-            continue
-        rows.append(
-            {
-                "item": "scrap",
-                "item_name": ITEMS["scrap"],
-                "price": price,
-                "currency": str(record["currency"]).strip(),
-                "unit": str(record["unit"]).strip(),
-                "spec": None if pd.isna(record.get("spec")) else str(record["spec"]),
-                "date": date,
-                "source": str(record["source"]).strip(),
-                "source_url": str(record["source_url"]).strip(),
-                "source_type": "manual",
-                "collected_at": collected_at,
-            }
-        )
-    return rows
-
-
 # ── 뉴스 ────────────────────────────────────────────────────────────────
 
 def _entry_date(entry) -> str | None:
@@ -279,14 +228,10 @@ def collect_all() -> dict:
     db.init_db()
     result = {"prices": 0, "news": 0, "errors": []}
 
-    for label, collector in (
-        ("World Bank (철광석/석탄)", collect_worldbank),
-        ("철스크랩 수기 입력", collect_scrap),
-    ):
-        try:
-            result["prices"] += db.save_prices(collector())
-        except Exception as exc:  # noqa: BLE001 - 개별 소스 실패를 격리한다
-            result["errors"].append(f"{label}: {type(exc).__name__} - {exc}")
+    try:
+        result["prices"] += db.save_prices(collect_worldbank())
+    except Exception as exc:  # noqa: BLE001 - 개별 소스 실패를 격리한다
+        result["errors"].append(f"World Bank (철광석/석탄): {type(exc).__name__} - {exc}")
 
     try:
         result["news"] += db.save_news(collect_news())

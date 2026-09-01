@@ -22,8 +22,11 @@ DATA_DIR = Path(__file__).parent / "data"
 DB_PATH = DATA_DIR / "steel.db"
 
 # Dashboard 에서 다루는 품목. 화면 표시 순서이기도 하다.
+#
+# 철스크랩은 무료·공개 시계열 소스를 확보하지 못해 제외했다.
+# 소스를 찾으면 여기에 "scrap": "철스크랩" 을 되살리고
+# data_collector 에 수집 함수를 추가하면 나머지 코드는 그대로 동작한다.
 ITEMS = {
-    "scrap": "철스크랩",
     "iron_ore": "철광석",
     "coal": "석탄",
 }
