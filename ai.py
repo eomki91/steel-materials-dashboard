@@ -201,6 +201,10 @@ def summarize(force: bool = False) -> dict:
 
 
 if __name__ == "__main__":
+    # 이 파일은 app.py 가 불러다 쓰는 모듈이다. 직접 실행은 점검용이므로
+    # 테이블이 없는 상태로 조회해 터지지 않도록 스키마부터 만든다.
+    db.init_db()
+    print("이 파일은 모듈입니다. 앱 실행은 'streamlit run app.py' 로 하세요.\n")
     print("provider:", detect_provider())
     outcome = summarize()
     print("status:", outcome["status"])
