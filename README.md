@@ -113,3 +113,25 @@ python data_collector.py
 ## 면책
 
 본 대시보드는 공개된 데이터를 수집해 참고용으로 제공합니다. 각 수치의 정확성은 원 출처를 확인하시기 바라며, 투자·매매 판단의 근거로 사용하지 마십시오. AI 요약은 자동 생성된 것으로 오류가 있을 수 있습니다.
+
+## Streamlit Community Cloud 배포
+
+1. [share.streamlit.io](https://share.streamlit.io) 에서 **Sign in with GitHub**
+2. **Create app → Deploy a public app from GitHub**
+3. 입력값
+   - Repository: `eomki91/steel-materials-dashboard`
+   - Branch: `main`
+   - Main file path: `app.py`
+4. **Advanced settings → Secrets** 에 아래를 붙여넣기 (AI Summary 를 쓸 경우)
+
+   ```toml
+   OPENAI_API_KEY = "sk-..."
+   ```
+
+5. **Deploy**
+
+`data/steel.db` 는 저장소에 없지만, 첫 접속 시 앱이 자동으로 데이터를 수집하므로
+방문자가 빈 화면을 보지 않습니다 (최초 1회 30초 내외).
+
+> Secrets 를 비워두면 Dashboard 와 News 는 정상 동작하고 AI Summary 화면에만 안내가 표시됩니다.
+> 배포 후에도 앱 메뉴의 **Settings → Secrets** 에서 언제든 추가/삭제할 수 있습니다.

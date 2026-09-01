@@ -134,9 +134,11 @@ def render_summary() -> None:
     provider = ai.detect_provider()
     if provider is None:
         st.warning(
-            "LLM API 키가 설정되지 않았습니다. "
-            "`.env.example` 을 `.env` 로 복사한 뒤 `OPENAI_API_KEY` 를 채워주세요. "
-            "(키가 없어도 Dashboard 와 News 는 정상 동작합니다.)"
+            "LLM API 키가 설정되지 않아 요약을 생성할 수 없습니다. "
+            "Dashboard 와 News 는 정상 동작합니다.\n\n"
+            "- 로컬 실행: `.env.example` 을 `.env` 로 복사하고 `OPENAI_API_KEY` 입력\n"
+            "- Streamlit Cloud: 앱 **Settings → Secrets** 에 "
+            "`OPENAI_API_KEY = \"sk-...\"` 추가"
         )
         return
 

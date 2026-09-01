@@ -31,7 +31,7 @@ from pathlib import Path
 import feedparser
 import pandas as pd
 import requests
-from bs4 import BeautifulSoup  # noqa: F401  (뉴스 제목 HTML 엔티티 정리에 사용)
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from database import ITEMS
@@ -218,7 +218,9 @@ def _entry_date(entry) -> str | None:
 
 
 def _clean_title(title: str) -> str:
-    return re.sub(r"\s+", " ", (title or "").strip())
+    """RSS 제목에 섞여 오는 HTML 태그/엔티티를 벗겨내고 공백을 정리한다."""
+    text = BeautifulSoup(title or "", "html.parser").get_text()
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def _fetch_feed(url: str):
